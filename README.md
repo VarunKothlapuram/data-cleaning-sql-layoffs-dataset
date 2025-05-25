@@ -1,159 +1,65 @@
-CREATE TABLE layoffs_staging
-LIKE layoffs;
+📊 Project Overview: Tech Layoffs Data Cleaning with SQL
+In the wake of significant global shifts in the tech industry, understanding the patterns and impacts of employee layoffs has become more important than ever. This project aims to clean and prepare a dataset containing tech layoff events across different companies, industries, and countries for meaningful analysis.
 
-SELECT * 
-FROM layoffs_staging;
-
-INSERT layoffs_staging
-
-SELECT *, ROW_NUMBER() OVER(
-PARTITION BY company, industry, total_laid_off, percentage_laid_off, `date`) AS row_num 
-FROM layoffs_staging;
-
-
--- creating CTE to search for dublicates
-
-WITH duplicates_cte AS
-(SELECT *, ROW_NUMBER() OVER(
-PARTITION BY company, location, industry, total_laid_off, percentage_laid_off, `date`, stage, country, funds_raised_millions) AS row_num 
-FROM layoffs_staging)
-SELECT * 
-FROM duplicates_cte
-WHERE row_num > 1;
+The raw dataset includes records with inconsistencies, null values, duplicate entries, and unstructured fields, which could hinder data insights if used as-is. Through this project, I performed data cleaning and transformation using SQL, ensuring the dataset is analysis-ready and reliable.
 
 
 
-SELECT *
-FROM layoffs_staging
-WHERE company ='100 Thieves';
+🧩 Dataset Summary
+The dataset contains the following key fields:
+
+company: Name of the company laying off employees.
+
+location: City or region where the layoff occurred.
+
+industry: Sector or industry to which the company belongs.
+
+total_laid_off: Total number of employees laid off.
+
+percentage_laid_off: Percentage of the company's workforce affected.
+
+date: Date of the layoff announcement.
+
+stage: Startup stage of the company (e.g., Series A, IPO).
+
+country: Country in which the layoff occurred.
+
+funds_raised_millions: Total funding raised by the company in millions.
 
 
 
-WITH duplicates_cte AS
-(SELECT *, ROW_NUMBER() OVER(
-PARTITION BY company, location, industry, total_laid_off, percentage_laid_off, `date`, stage, country, funds_raised_millions) AS row_num 
-FROM layoffs_staging)
-DELETE 
-FROM duplicate_cte 
-WHERE row_num > 1;
+🛠️ Tools & Technologies Used
+SQL (MySQL syntax) – for querying, transformation, and cleaning
+
+Window functions – to detect duplicates efficiently
+
+CTEs (Common Table Expressions) – for modular and readable SQL code
+
+Data Types & String Functions – for standardizing and formatting data
 
 
 
+🎯 Project Goals
+Create a safe staging environment to work with the data without altering the original source.
 
-CREATE TABLE `layoffs_staging2` (
-  `company` text,
-  `location` text,
-  `industry` text,
-  `total_laid_off` int DEFAULT NULL,
-  `percentage_laid_off` text,
-  `date` text,
-  `stage` text,
-  `country` text,
-  `funds_raised_millions` int DEFAULT NULL,
-  `row_num` INT
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+Identify and remove duplicate records based on multiple attributes using SQL window functions.
 
+Standardize data fields such as company names (trimming spaces), date formats, and country names to ensure consistency.
 
-SELECT *
-FROM layoffs_staging2;
+Handle missing values by leveraging existing non-null values for the same company where possible.
 
-INSERT INTO layoffs_staging2
-SELECT *, 
-ROW_NUMBER() OVER(
-PARTITION BY company, location, industry, total_laid_off, percentage_laid_off, `date`, stage, country, funds_raised_millions) AS row_num 
-FROM layoffs_staging;
+Filter out incomplete or irrelevant records, particularly where critical fields like total_laid_off and percentage_laid_off are both null.
 
-SET SQL_SAFE_UPDATES = 0; -- To temporarily disable safe update mode
+Prepare a clean, reliable dataset (layoffs_staging2) that can be exported or used for further downstream tasks such as:
 
-DELETE 
-FROM layoffs_staging2
-WHERE row_num > 1;
+Dashboards and visualizations (e.g., in Power BI or Tableau)
 
+Trend analysis (layoffs by industry, country, or over time)
 
-SELECT *
-FROM layoffs_staging2;
-
-
-UPDATE layoffs_staging2
-SET company = TRIM(company);
-
-SET SQL_SAFE_UPDATES = 1; 
-
-SELECT DISTINCT industry
-FROM layoffs_staging2
-ORDER BY 1;
-
-SELECT DISTINCT location
-FROM layoffs_staging2
-ORDER BY 1;
-
-SELECT DISTINCT country
-FROM layoffs_staging2
-ORDER BY 1;
-
-
-UPDATE layoffs_staging2
-SET country = 'united states'
-WHERE country = 'united states.';
+Predictive analytics or machine learning models
 
 
 
-SELECT DISTINCT country
-FROM layoffs_staging2
-ORDER BY 1;
-
-
-SELECT `date`, 
-STR_TO_DATE(`date`, '%m/%d/%Y') AS date
-FROM layoffs_staging2;
-
-
-UPDATE layoffs_staging2
-SET `date` = STR_TO_DATE(`date`, '%m/%d/%Y');
-
-
-ALTER TABLE layoffs_staging2
-MODIFY COLUMN `date` DATE;
-
-SELECT ls1.industry, ls2.industry
-FROM layoffs_staging2 ls1
-JOIN layoffs_staging2 ls2
-	ON ls1.company = ls2.company
-WHERE (ls1.industry IS NULL OR ls1.industry = '')
-AND ls2.industry IS NOT NULL;
-
-
-UPDATE layoffs_staging2 ls1
-JOIN layoffs_staging2 ls2
-	ON ls1.company = ls2.company
-SET ls1.industry = ls2.industry
-WHERE (ls1.industry IS NULL)
-AND ls2.industry IS NOT NULL;
-
-
-SELECT *
-FROM layoffs_staging2;
-
-
-
-
-
-SELECT *
-FROM layoffs_staging2
-WHERE total_laid_off IS NULL
-AND percentage_laid_off IS NULL;
-
-
-DELETE
-FROM layoffs_staging2
-WHERE total_laid_off IS NULL
-AND percentage_laid_off IS NULL;
-
-
-ALTER TABLE layoffs_staging2
-DROP COLUMN row_num;
-
-
-SELECT *
-FROM layoffs_staging2;
+✅ Final Outcome
+At the end of the process, a fully cleaned, deduplicated, and standardized dataset is stored in a new staging table (layoffs_staging2). This cleaned dataset can now serve as the foundation for deeper business insights into industry trends, workforce changes, and economic indicators in the tech sector.
 
